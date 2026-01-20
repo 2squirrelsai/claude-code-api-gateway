@@ -1,0 +1,388 @@
+{
+  "info": {
+    "name": "Claude API Gateway",
+    "description": "API collection for Claude API Gateway - a robust queue and caching layer for Claude CLI",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "claude-api-gateway"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "adminUsername",
+      "value": "admin",
+      "type": "string"
+    },
+    {
+      "key": "adminPassword",
+      "value": "changeme",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health & Status",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Check if the gateway is running and healthy"
+          },
+          "response": [
+            {
+              "name": "Healthy",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"ok\",\n  \"timestamp\": 1234567890123\n}"
+            }
+          ]
+        },
+        {
+          "name": "Prometheus Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["metrics"]
+            },
+            "description": "Get Prometheus-formatted metrics (requires METRICS_ENABLED=true)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Query API",
+      "item": [
+        {
+          "name": "Submit Query",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.jobId) {",
+                  "    pm.environment.set('lastJobId', jsonData.jobId);",
+                  "}",
+                  "",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has requestId', function () {",
+                  "    pm.expect(jsonData).to.have.property('requestId');",
+                  "});",
+                  "",
+                  "pm.test('Response has status', function () {",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(['queued', 'cached', 'duplicate']).to.include(jsonData.status);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"What is 2+2?\",\n  \"priority\": \"normal\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "query"]
+            },
+            "description": "Submit a query to be processed by Claude CLI.\n\n**Request Body:**\n- `query` (required): The query string to send to Claude\n- `webhookUrl` (optional): URL to POST results when complete\n- `context` (optional): Additional context object for cache key generation\n- `priority` (optional): \"high\" or \"normal\" (default)"
+          },
+          "response": [
+            {
+              "name": "Queued",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"requestId\": \"uuid-here\",\n  \"status\": \"queued\",\n  \"jobId\": \"job-id-here\"\n}"
+            },
+            {
+              "name": "Cached",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"requestId\": \"uuid-here\",\n  \"status\": \"cached\",\n  \"result\": {\n    \"response\": \"4\",\n    \"format\": \"text\"\n  }\n}"
+            },
+            {
+              "name": "Duplicate",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"requestId\": \"uuid-here\",\n  \"status\": \"duplicate\",\n  \"jobId\": \"existing-job-id\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Submit Query with Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"Explain quantum computing in simple terms\",\n  \"webhookUrl\": \"https://webhook.site/your-unique-id\",\n  \"priority\": \"high\",\n  \"context\": {\n    \"format\": \"markdown\",\n    \"audience\": \"beginner\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "query"]
+            },
+            "description": "Submit a query with a webhook URL for async result delivery"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Job Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has jobId', function () {",
+                  "    pm.expect(jsonData).to.have.property('jobId');",
+                  "});",
+                  "",
+                  "pm.test('Response has state', function () {",
+                  "    pm.expect(jsonData).to.have.property('state');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/query/{{lastJobId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "query", "{{lastJobId}}"]
+            },
+            "description": "Get the status and result of a previously submitted job.\n\n**States:**\n- `waiting`: Job is in queue\n- `active`: Job is being processed\n- `completed`: Job finished successfully (result available)\n- `failed`: Job failed (error available)\n- `delayed`: Job is delayed for retry"
+          },
+          "response": [
+            {
+              "name": "Completed",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"jobId\": \"job-id\",\n  \"state\": \"completed\",\n  \"progress\": 100,\n  \"result\": {\n    \"response\": \"The answer is 4\",\n    \"format\": \"text\"\n  },\n  \"error\": null\n}"
+            },
+            {
+              "name": "Active",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"jobId\": \"job-id\",\n  \"state\": \"active\",\n  \"progress\": 50,\n  \"result\": null,\n  \"error\": null\n}"
+            },
+            {
+              "name": "Failed",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"jobId\": \"job-id\",\n  \"state\": \"failed\",\n  \"progress\": 10,\n  \"result\": null,\n  \"error\": \"Claude exited with code 1: Error message\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin API",
+      "item": [
+        {
+          "name": "Get Stats",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUsername}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/api/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "api", "stats"]
+            },
+            "description": "Get current queue and cache statistics"
+          },
+          "response": [
+            {
+              "name": "Stats",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"queue\": {\n    \"waiting\": 5,\n    \"active\": 2,\n    \"completed\": 150,\n    \"failed\": 3,\n    \"delayed\": 0,\n    \"paused\": 0\n  },\n  \"cache\": {\n    \"totalKeys\": 42,\n    \"info\": \"...\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Retry Job",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUsername}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/queue/{{lastJobId}}/retry",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "queue", "{{lastJobId}}", "retry"]
+            },
+            "description": "Retry a failed job"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Remove Job",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUsername}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/queue/{{lastJobId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "queue", "{{lastJobId}}"]
+            },
+            "description": "Remove a job from the queue"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Clear Cache",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUsername}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cache",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "cache"]
+            },
+            "description": "Clear all cached responses"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"cleared\": 42\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ]
+}

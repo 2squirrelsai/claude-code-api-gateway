@@ -2,6 +2,10 @@
 
 A robust API gateway for Claude CLI with queuing, caching, deduplication, and monitoring capabilities.
 
+![Tests](https://img.shields.io/badge/tests-15%20passing-brightgreen)
+![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 ## Features
 
 - **Job Queue**: Bull-based queue with configurable concurrency and retry logic
@@ -133,6 +137,62 @@ Response:
                                                  └─────────────┘
 ```
 
+## API Documentation
+
+### Postman Collection
+
+Import the Postman collection for easy API testing:
+
+📁 **[docs/claude-api-gateway.postman_collection.json](docs/claude-api-gateway.postman_collection.json)**
+
+The collection includes:
+
+- Health & status endpoints
+- Query submission and status checking
+- Admin API with authentication
+- Pre-configured variables and test scripts
+
+**Collection Variables:**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `baseUrl` | `http://localhost:3000` | Gateway URL |
+| `adminUsername` | `admin` | Admin username |
+| `adminPassword` | `changeme` | Admin password |
+
+### Request/Response Examples
+
+**Submit Query:**
+
+```json
+POST /api/query
+{
+  "query": "Explain quantum computing",
+  "webhookUrl": "https://webhook.site/xxx",
+  "priority": "high",
+  "context": { "format": "markdown" }
+}
+```
+
+**Response States:**
+
+- `queued` - Job added to queue
+- `cached` - Result returned from cache
+- `duplicate` - Existing in-flight job found
+
+## Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run with coverage
+npm test -- --coverage
+
+# Run specific test file
+npm test -- tests/phase-checkpoints.test.js
+```
+
 ## Monitoring
 
 Access Grafana at `http://localhost:3001` (default credentials: admin/admin)
@@ -143,6 +203,20 @@ Key metrics:
 - `claude_jobs_failed_total` - Total failed jobs
 - `claude_cache_hits_total` - Cache hit count
 - `claude_execution_duration_seconds` - Claude CLI execution time
+
+## Project Structure
+
+```text
+src/
+├── config/         # Environment configuration
+├── routes/         # API endpoints (query, admin)
+├── services/       # Core services (cache, claude, webhook, mcp, dedup)
+├── queues/         # Bull queue processor and events
+├── metrics/        # Prometheus metrics
+├── utils/          # Logger, retry, prompt utilities
+├── views/          # Admin dashboard templates
+└── public/         # Static assets
+```
 
 ## License
 
