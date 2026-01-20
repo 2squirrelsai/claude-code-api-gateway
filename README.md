@@ -6,6 +6,12 @@ A robust API gateway for Claude CLI with queuing, caching, deduplication, and mo
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+## Documentation
+
+📖 **[Full User Guide](docs/USER_GUIDE.md)** - Comprehensive documentation with examples, best practices, and troubleshooting
+
+📬 **[Postman Collection](docs/claude-api-gateway.postman_collection.json)** - Import into Postman for easy API testing
+
 ## Features
 
 - **Job Queue**: Bull-based queue with configurable concurrency and retry logic
