@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Queue Management - Claude Gateway</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/admin">Dashboard</a>
+    <a href="/admin/queue">Queue</a>
+    <a href="/admin/cache">Cache</a>
+  </nav>
+
+  <main>
+    <h1>Queue Management</h1>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Job ID</th>
+          <th>Status</th>
+          <th>Query</th>
+          <th>Attempts</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% jobs.forEach(job => { %>
+        <tr>
+          <td><%= job.id %></td>
+          <td><%= job.state || 'unknown' %></td>
+          <td><%= job.data.query ? job.data.query.substring(0, 50) + '...' : 'N/A' %></td>
+          <td><%= job.attemptsMade %></td>
+          <td>
+            <button onclick="retryJob('<%= job.id %>')">Retry</button>
+            <button class="danger" onclick="removeJob('<%= job.id %>')">Remove</button>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </main>
+
+  <script src="/js/queue.js"></script>
+</body>
+</html>

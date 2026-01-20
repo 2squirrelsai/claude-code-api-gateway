@@ -1,0 +1,42 @@
+{
+  "dashboard": {
+    "title": "Claude API Gateway",
+    "panels": [
+      {
+        "title": "Request Rate",
+        "type": "graph",
+        "targets": [
+          { "expr": "rate(http_requests_total[5m])", "legendFormat": "{{method}} {{route}}" }
+        ]
+      },
+      {
+        "title": "Queue Size",
+        "type": "graph",
+        "targets": [
+          { "expr": "claude_queue_size", "legendFormat": "{{state}}" }
+        ]
+      },
+      {
+        "title": "Job Success Rate",
+        "type": "stat",
+        "targets": [
+          { "expr": "rate(claude_jobs_completed_total[5m]) / (rate(claude_jobs_completed_total[5m]) + rate(claude_jobs_failed_total[5m]))" }
+        ]
+      },
+      {
+        "title": "Cache Hit Rate",
+        "type": "gauge",
+        "targets": [
+          { "expr": "rate(claude_cache_hits_total[5m]) / (rate(claude_cache_hits_total[5m]) + rate(claude_cache_misses_total[5m]))" }
+        ]
+      },
+      {
+        "title": "Claude Execution Time",
+        "type": "heatmap",
+        "targets": [
+          { "expr": "rate(claude_execution_duration_seconds_bucket[5m])" }
+        ]
+      }
+    ]
+  }
+}

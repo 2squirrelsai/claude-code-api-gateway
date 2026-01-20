@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cache Management - Claude Gateway</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/admin">Dashboard</a>
+    <a href="/admin/queue">Queue</a>
+    <a href="/admin/cache">Cache</a>
+  </nav>
+
+  <main>
+    <h1>Cache Management</h1>
+
+    <section class="stats-grid">
+      <div class="stat-card">
+        <h3>Cache Statistics</h3>
+        <p>Total Keys: <span id="totalKeys"><%= stats.totalKeys %></span></p>
+        <button class="danger" onclick="clearCache()">Clear All Cache</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/cache.js"></script>
+</body>
+</html>

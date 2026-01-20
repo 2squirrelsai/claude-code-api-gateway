@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Claude Gateway Admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/admin">Dashboard</a>
+    <a href="/admin/queue">Queue</a>
+    <a href="/admin/cache">Cache</a>
+  </nav>
+
+  <main>
+    <h1>Dashboard</h1>
+
+    <section class="stats-grid">
+      <div class="stat-card">
+        <h3>Queue</h3>
+        <p>Waiting: <span id="waiting"><%= queueCounts.waiting %></span></p>
+        <p>Active: <span id="active"><%= queueCounts.active %></span></p>
+        <p>Completed: <span id="completed"><%= queueCounts.completed %></span></p>
+        <p>Failed: <span id="failed"><%= queueCounts.failed %></span></p>
+      </div>
+
+      <div class="stat-card">
+        <h3>Cache</h3>
+        <p>Keys: <span id="cacheKeys"><%= cacheStats.totalKeys %></span></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>
